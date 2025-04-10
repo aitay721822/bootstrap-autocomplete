@@ -222,11 +222,11 @@
    * ------------------------------------------------------------------------
    */
 
-  var NAME = 'autocomplete';
-  var VERSION = '0.2.0';
-  var DATA_KEY = 'bs.autocomplete';
+  var NAME = "autocomplete";
+  var VERSION = "0.2.0";
+  var DATA_KEY = "bs.autocomplete";
   var EVENT_KEY = "." + DATA_KEY;
-  var DATA_API_KEY = '.data-api';
+  var DATA_API_KEY = ".data-api";
   var JQUERY_NO_CONFLICT = $.fn[NAME];
   var Default = {
     list: null,
@@ -241,16 +241,16 @@
     preProcess: null
   };
   var DefaultType = {
-    list: '(null|string|element)',
-    prefetch: '(null|string)',
-    filter: '(null|string)',
-    filterDelay: 'number',
-    filterMinChars: 'number',
-    filterRelation: '(null|object)',
-    maxResult: 'number',
-    preProcess: '(null|function)',
-    onPick: '(null|function)',
-    onItemRendered: '(null|function)'
+    list: "(null|string|element)",
+    prefetch: "(null|string)",
+    filter: "(null|string)",
+    filterDelay: "number",
+    filterMinChars: "number",
+    filterRelation: "(null|object)",
+    maxResult: "number",
+    preProcess: "(null|function)",
+    onPick: "(null|function)",
+    onItemRendered: "(null|function)"
   };
   var Event = {
     BLUR_DATA_API: "blur" + EVENT_KEY + DATA_API_KEY,
@@ -282,19 +282,19 @@
       this._dropdown = null;
       this._spinner = null;
       this._result = [];
-      this._query = '';
+      this._query = "";
       this._preventClose = false;
       this._timer = null;
       this._relations = null;
 
-      if (element.hasAttribute('list')) {
-        this._config.list = '#' + element.getAttribute('list');
-        element.removeAttribute('list');
+      if (element.hasAttribute("list")) {
+        this._config.list = "#" + element.getAttribute("list");
+        element.removeAttribute("list");
       }
 
-      if (!this._config.list && !this._config.prefetch && !this._config.filter) throw new TypeError('No data source provided');
+      if (!this._config.list && !this._config.prefetch && !this._config.filter) throw new TypeError("No data source provided");
       if (this._config.filterRelation) this._handleRelations();
-      element.setAttribute('autocomplete', 'off');
+      element.setAttribute("autocomplete", "off");
 
       this._makeDropdown();
 
@@ -341,6 +341,11 @@
     _proto._addElementListener = function _addElementListener() {
       var _this = this;
 
+      $(this._element).on("focus", function (e) {
+        _this._query = _this._element.value.trim().toLowerCase();
+
+        _this._findFromList();
+      });
       $(this._element).on(Event.KEYDOWN_DATA_API, function (e) {
         var prevent = false;
 
@@ -370,8 +375,8 @@
 
           case KeyCode.ENTER:
             if (_this._isShown) {
-              var item = $(_this._dropdown).children('.active').get(0);
-              if (!item) item = $(_this._dropdown).children(':first-child').get(0);
+              var item = $(_this._dropdown).children(".active").get(0);
+              if (!item) item = $(_this._dropdown).children(":first-child").get(0);
               if (item) _this._selectItem(item);
 
               _this.hide();
@@ -416,14 +421,14 @@
       // from datalist
       if (this._config.list) {
         var dataList = this._config.list;
-        if (typeof dataList === 'string') dataList = document.querySelector(this._config.list);
+        if (typeof dataList === "string") dataList = document.querySelector(this._config.list);
 
         if (dataList) {
           Array.from(dataList.children).forEach(function (o) {
             var val = o.innerHTML.toLowerCase();
             if (_this2._items.includes(val)) return;
 
-            _this2._items.push({"value":o.value,"text":val});
+            _this2._items.push(val);
 
             _this2._labels[val] = o.innerHTML;
           });
@@ -455,7 +460,6 @@
 
       if (!this._config.filter) return;
       if (this._dropdown.children.length >= this._config.maxResult) return;
-      if (this._query.length < this._config.filterMinChars) return;
       if (this._timer) clearTimeout(this._timer);
       var vval = this._query;
       this._timer = setTimeout(function () {
@@ -463,17 +467,17 @@
 
         _this3._showSpinner();
 
-        var url = _this3._config.filter.replace(/%23/g, '#').replace('#QUERY#', _this3._query);
+        var url = _this3._config.filter.replace(/%23/g, "#").replace("#QUERY#", _this3._query);
 
         if (_this3._relations) {
-          var sep = url.includes('?') ? '&' : '?';
+          var sep = url.includes("?") ? "&" : "?";
 
           for (var k in _this3._relations) {
             var el = _this3._relations[k];
             var val = $(el).val();
             if (!val) continue;
             url += "" + sep + k + "=" + val;
-            sep = '&';
+            sep = "&";
           }
         }
 
@@ -502,20 +506,19 @@
     _proto._findFromList = function _findFromList() {
       var _this4 = this;
 
-      this._truncateDropdown();
+      this._truncateDropdown(); // 先複製所有項目到 local
 
-      this._result = [];
-      var local = [];
 
-      this._items.forEach(function (i) {
-        if (!i["text"].includes(_this4._query)) return;
-        var label = _this4._labels[i["text"]];
-        if (_this4._result.includes(label)) return;
-        local.push({"value":i["value"],"text":label});
+      var local = [].concat(Object.values(this._labels)); // 如果有搜尋字串,則進行篩選
 
-        _this4._result.push({"value":i["value"],"text":label});
-      }); // now render the result
+      if (this._query) {
+        local = local.filter(function (label) {
+          return label.toLowerCase().includes(_this4._query);
+        });
+      } // 更新結果集
 
+
+      this._result = local; // 渲染結果
 
       if (local.length) {
         this._renderItem(local);
@@ -529,29 +532,29 @@
     };
 
     _proto._focusNext = function _focusNext() {
-      var next = $(this._dropdown).children(':first-child').get(0);
-      var focused = $(this._dropdown).children('.active').get(0);
+      var next = $(this._dropdown).children(":first-child").get(0);
+      var focused = $(this._dropdown).children(".active").get(0);
 
       if (focused) {
-        focused.classList.remove('active');
+        focused.classList.remove("active");
         var tmpNext = $(focused).next().get(0);
         if (tmpNext) next = tmpNext;
       }
 
-      if (next) next.classList.add('active');
+      if (next) next.classList.add("active");
     };
 
     _proto._focusPrev = function _focusPrev() {
-      var next = $(this._dropdown).children(':last-child').get(0);
-      var focused = $(this._dropdown).children('.active').get(0);
+      var next = $(this._dropdown).children(":last-child").get(0);
+      var focused = $(this._dropdown).children(".active").get(0);
 
       if (focused) {
-        focused.classList.remove('active');
+        focused.classList.remove("active");
         var tmpNext = $(focused).prev().get(0);
         if (tmpNext) next = tmpNext;
       }
 
-      if (next) next.classList.add('active');
+      if (next) next.classList.add("active");
     };
 
     _proto._getConfig = function _getConfig(config) {
@@ -569,7 +572,7 @@
         var selector = this._config.filterRelation[name];
         this._relations[name] = $(selector).get(0);
         $(this._relations[name]).change(function (e) {
-          _this5._element.value = '';
+          _this5._element.value = "";
           $(_this5._element).change(); // we need to trigger this manually
 
           _this5._items = [];
@@ -580,15 +583,15 @@
     _proto._hideDropdown = function _hideDropdown() {
       this._isShown = false;
 
-      this._dropdown.classList.remove('show');
+      this._dropdown.classList.remove("show");
     };
 
     _proto._hideSpinner = function _hideSpinner() {
-      this._spinner.style.display = 'none';
+      this._spinner.style.display = "none";
     };
 
     _proto._makeDropdown = function _makeDropdown() {
-      this._element.parentNode.style.position = 'relative';
+      this._element.parentNode.style.position = "relative";
       var tmpl = '<div class="dropdown-menu" style="width:100%"></div>';
       this._dropdown = $(tmpl).appendTo(this._element.parentNode).get(0);
     };
@@ -597,9 +600,9 @@
       var tmpl = '<div class="spinner-border spinner-border-sm text-secondary" role="status"></div>';
       this._spinner = $(tmpl).appendTo(this._element.parentNode).get(0);
       $(this._spinner).css({
-        position: 'absolute',
-        right: $(this._element).css('padding-right'),
-        top: this._element.offsetTop + (this._element.offsetHeight - this._spinner.offsetHeight) / 2 + 'px'
+        position: "absolute",
+        right: $(this._element).css("padding-right"),
+        top: this._element.offsetTop + (this._element.offsetHeight - this._spinner.offsetHeight) / 2 + "px"
       });
 
       this._hideSpinner();
@@ -610,9 +613,9 @@
 
       items.forEach(function (i) {
         if (_this6._dropdown.children.length >= _this6._config.maxResult) return;
-        var item = $('<a class="dropdown-item" href="#"></a>').attr("value",i["value"]);
+        var item = $('<a class="dropdown-item" href="#"></a>');
         var itemEl = item.get(0);
-        item.text(i["text"]).appendTo(_this6._dropdown);
+        item.text(i).appendTo(_this6._dropdown);
         if (_this6._config.onItemRendered) _this6._config.onItemRendered(_this6._element, itemEl);
         var renderEvent = $.Event(Event.ITEM_RENDER, {
           item: itemEl
@@ -643,15 +646,15 @@
     _proto._showDropdown = function _showDropdown() {
       this._isShown = true;
 
-      this._dropdown.classList.add('show');
+      this._dropdown.classList.add("show");
     };
 
     _proto._showSpinner = function _showSpinner() {
-      this._spinner.style.display = 'inline-block';
+      this._spinner.style.display = "inline-block";
     };
 
     _proto._truncateDropdown = function _truncateDropdown() {
-      this._dropdown.innerHTML = '';
+      this._dropdown.innerHTML = "";
     } // Static
     ;
 
@@ -659,15 +662,15 @@
       return this.each(function () {
         var data = $(this).data(DATA_KEY);
 
-        var _config = _objectSpread({}, Default, $(this).data(), typeof config === 'object' && config ? config : {});
+        var _config = _objectSpread({}, Default, $(this).data(), typeof config === "object" && config ? config : {});
 
         if (!data) {
           data = new Autocomplete(this, _config);
           $(this).data(DATA_KEY, data);
         }
 
-        if (typeof config === 'string') {
-          if (typeof data[config] === 'undefined') throw new TypeError("No method named \"" + config + "\"");
+        if (typeof config === "string") {
+          if (typeof data[config] === "undefined") throw new TypeError("No method named \"" + config + "\"");
           data[config](relatedTarget);
         }
       });
